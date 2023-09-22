@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Analisador de Imagem Azure Cognitive Vision</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        img {
+            max-width: 100%;
+        }
+        .input {
+            margin: 10px;
+            padding: 5px;
+            border-radius: 5px;
+            border-color: coral;
+            border-style: solid;
+            border-width: 1.5px;
+        }
+        .botao{
+            margin: 10px;
+            padding: 5px;
+            border-radius: 5px;
+            border-color: coral;
+            border-style: solid;
+            border-width: 1.5px;
+            background-color: coral;
+            color: white;
+            width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Analisador de Imagem Azure Cognitive Vision</h1>
+        <form id="azureForm">
+            <label for="azureEndpoint">Endpoint da Azure:</label>
+            <input class="input" type="text" id="azureEndpoint" required value="https://detectarspucmg.cognitiveservices.azure.com/"><br>
+
+            <label for="apiKey">Chave de API:</label>
+            <input class="input" type="text" id="apiKey" required><br>
+
+            <label for="imageUrl">URL da Imagem:</label>
+            <input class="input" type="text" id="imageUrl" required><br>
+
+            <button class="botao" type="button" onclick="analyzeImage()">Analisar Imagem</button>
+        </form>
+        <h2>Descrição da Imagem:</h2>
+        <p id="imageDescription"></p>
+        <h2>Cor Predominante:</h2>
+        <div id="predominantColors"></div>
+        <h2>Imagem:</h2>
+        <div id="imageContainer">
+            <img id="uploadedImage" src="" alt="Imagem Carregada">
+        </div>
+    </div>
+
+    <script>
+        function analyzeImage() {
+            const azureEndpoint = document.getElementById("azureEndpoint").value;
+            const apiKey = document.getElementById("apiKey").value;
+            const imageUrl = document.getElementById("imageUrl").value;
+
+            // Configuração da solicitação para o serviço Cognitive da Azure
+            const requestOptions = {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Ocp-Apim-Subscription-Key": apiKey
+                },
+                body: JSON.stringify({ url: imageUrl })
+            };
+
+            // Construir a URL completa para a análise
+            const apiUrl = azureEndpoint + "/vision/v3.0/analyze?visualFeatures=Description,Color";
+            
+            // Realiza a solicitação de análise
+            fetch(apiUrl, requestOptions)
+                .then(response => response.json())
+                .then(data => {
+                    // Exibe a descrição da imagem
+                    document.getElementById("imageDescription").textContent = "Descrição: " + data.description.captions[0].text;
+
+                    // Exibe as cores predominantes
+                    const colors = data.color.dominantColors;
+                    const colorDiv = document.getElementById("predominantColors");
+                    colorDiv.innerHTML = "Cores Predominantes: ";
+                    colors.forEach(color => {
+                        const colorBox = document.createElement("div");
+                        colorBox.style.backgroundColor = color;
+                        colorBox.style.display = "inline-block";
+                        colorBox.style.width = "30px";
+                        colorBox.style.height = "30px";
+                        colorDiv.appendChild(colorBox);
+                    });
+
+                    // Exibe a imagem carregada
+                    const uploadedImage = document.getElementById("uploadedImage");
+                    uploadedImage.src = imageUrl;
+                })
+                .catch(error => console.error("Erro ao analisar imagem: " + error));
+        }
+    </script>
+</body>
+</html>
